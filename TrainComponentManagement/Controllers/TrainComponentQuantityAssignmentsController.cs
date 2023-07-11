@@ -4,7 +4,7 @@ using TrainComponentManagement.Repositories;
 
 namespace TrainComponentManagement.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/train-component-quantity-assignments")]
     [ApiController]
     public class TrainComponentQuantityAssignmentsController : ControllerBase
     {
