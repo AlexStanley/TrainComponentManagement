@@ -18,7 +18,7 @@ namespace TrainComponentManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var trainComponents = await _trainComponentRepository.GetAllAsync();
+            var trainComponents = await _trainComponentRepository.GetTrainComponents();
             return Ok(trainComponents);
         }
 
@@ -26,7 +26,7 @@ namespace TrainComponentManagement.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var trainComponent = await _trainComponentRepository.GetByIdAsync(id);
+            var trainComponent = await _trainComponentRepository.GetTrainComponent(id);
 
             if (trainComponent == null)
                 return NotFound();
@@ -37,7 +37,7 @@ namespace TrainComponentManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TrainComponent trainComponent)
         {
-            await _trainComponentRepository.AddAsync(trainComponent);
+            await _trainComponentRepository.CreateTrainComponent(trainComponent);
             return Ok(trainComponent);
         }
 
@@ -48,7 +48,7 @@ namespace TrainComponentManagement.Controllers
             if (id != trainComponent.ID)
                 return BadRequest();
 
-            await _trainComponentRepository.UpdateAsync(trainComponent);
+            await _trainComponentRepository.UpdateTrainComponent(trainComponent);
             return Ok(trainComponent);
         }
 
@@ -56,7 +56,7 @@ namespace TrainComponentManagement.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _trainComponentRepository.DeleteAsync(id);
+            await _trainComponentRepository.DeleteTrainComponent(id);
             return Ok();
         }
     }

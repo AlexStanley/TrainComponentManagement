@@ -12,6 +12,5 @@ namespace TrainComponentManagement.Models
         public string UniqueNumber { get; set; } = string.Empty;
         [Required]
         public bool CanAssignQuantity { get; set; }
-        public int? ItemAmount { get; set; }
     }
 }

@@ -11,9 +11,14 @@ namespace TrainComponentManagement.Models
         public DbSet<TrainComponent> TrainComponents { get; set; }
         public DbSet<ComponentHierarchy> ComponentHierarchies { get; set; }
 
+        public DbSet<TrainComponentQuantityAssignment> TrainComponentQuantityAssignments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TrainComponent>()
+                .HasKey(tc => tc.ID);
+
+            modelBuilder.Entity<TrainComponentQuantityAssignment>()
                 .HasKey(tc => tc.ID);
 
             modelBuilder.Entity<ComponentHierarchy>()
@@ -23,13 +28,19 @@ namespace TrainComponentManagement.Models
                 .HasOne(ch => ch.ParentComponent)
                 .WithMany()
                 .HasForeignKey(ch => ch.ParentComponentID)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.ClientNoAction);
 
             modelBuilder.Entity<ComponentHierarchy>()
                 .HasOne(ch => ch.ChildComponent)
                 .WithMany()
                 .HasForeignKey(ch => ch.ChildComponentID)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.ClientNoAction);
+
+            modelBuilder.Entity<TrainComponentQuantityAssignment>()
+                .HasOne(ch => ch.TrainComponent)
+                .WithMany()
+                .HasForeignKey(ch => ch.TrainComponentID)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
     }

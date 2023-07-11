@@ -1,13 +1,14 @@
-﻿using TrainComponentManagement.Models;
+﻿using TrainComponentManagement.Dtos;
+using TrainComponentManagement.Models;
 
 namespace TrainComponentManagement.Repositories
 {
     public interface ITrainComponentRepository
     {
-        Task<List<TrainComponent>> GetAllAsync();
-        Task<TrainComponent?> GetByIdAsync(int id);
-        Task AddAsync(TrainComponent trainComponent);
-        Task UpdateAsync(TrainComponent trainComponent);
-        Task DeleteAsync(int id);
+        Task<IEnumerable<TrainComponentDto>> GetTrainComponents();
+        Task<TrainComponent?> GetTrainComponent(int id);
+        Task CreateTrainComponent(TrainComponent trainComponent);
+        Task UpdateTrainComponent(TrainComponent trainComponent);
+        Task DeleteTrainComponent(int id);
     }
 }

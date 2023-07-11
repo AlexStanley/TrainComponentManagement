@@ -1,7 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using TrainComponentManagement.Dtos;
-using TrainComponentManagement.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using TrainComponentManagement.Repositories;
 
 namespace TrainComponentManagement.Controllers
@@ -12,86 +9,62 @@ namespace TrainComponentManagement.Controllers
     {
         private readonly ITrainComponentRepository _trainComponentRepository;
         private readonly IComponentHierarchyRepository _componentHierarchyRepository;
-        private readonly IMapper _mapper;
+
         public ComponentHierarchiesController(ITrainComponentRepository trainComponentRepository,
-            IComponentHierarchyRepository componentHierarchyRepository, IMapper mapper)
+            IComponentHierarchyRepository componentHierarchyRepository)
         {
             _trainComponentRepository = trainComponentRepository;
             _componentHierarchyRepository = componentHierarchyRepository;
-            _mapper = mapper;
         }
 
         [HttpGet("hierarchy")]
         public async Task<IActionResult> GetHierarchy()
         {
-            var trainComponents = await _trainComponentRepository.GetAllAsync();
-            var componentHierarchies = await _componentHierarchyRepository.GetAllAsync();
+            var hierarchy = await _componentHierarchyRepository.BuildHierarchy();
+            return Ok(hierarchy);
+        }
 
-            var rootComponents = new List<TrainComponentDto>();
-
-            foreach (var component in trainComponents)
-            {
-                if (!componentHierarchies.Any(ch => ch.ChildComponentID == component.ID))
-                {
-                    var rootComponent = _mapper.Map<TrainComponentDto>(component);
-                    BuildHierarchy(component, componentHierarchies, rootComponent);
-                    rootComponents.Add(rootComponent);
-                }
-            }
-
-            return Ok(rootComponents);
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> GetHierarchyComponentById(int id)
+        {
+            var hierarchyComponent = await _componentHierarchyRepository.GetTrainComponentClosureById(id);
+            return Ok(hierarchyComponent);
         }
 
         [HttpPost]
-        [Route("components/{parentId}/children")]
-        public async Task<IActionResult> AddChild(int parentId, [FromBody] int childId)
+        [Route("components/{parentId}/children/{childId}")]
+        public async Task<IActionResult> AddChild(int parentId, int childId)
         {
-            var parentComponent = await _trainComponentRepository.GetByIdAsync(parentId);
-            var childComponent = await _trainComponentRepository.GetByIdAsync(childId);
+            var parentComponent = await _trainComponentRepository.GetTrainComponent(parentId);
+            var childComponent = await _trainComponentRepository.GetTrainComponent(childId);
 
             if (parentComponent == null || childComponent == null)
                 return NotFound();
 
-            // Check if the parent-child relationship already exists
             if (await _componentHierarchyRepository.IsParentChildRelationExists(parentId, childId))
                 return BadRequest("The parent-child relationship already exists.");
 
-            var componentHierarchy = new ComponentHierarchy
-            {
-                ParentComponentID = parentId,
-                ChildComponentID = childId
-            };
+            if (parentId == childId)
+                return BadRequest("The parent element can't be equel to child element.");
 
-            await _componentHierarchyRepository.AddAsync(componentHierarchy);
+            await _componentHierarchyRepository.AddAsync(parentId, childId);
             return Ok();
         }
 
-        [HttpPut("components/{id}/assignquantity")]
-        public async Task<IActionResult> AssignQuantity(int id, [FromBody] bool canAssignQuantity)
+        [HttpPut]
+        [Route("{elementId}/newparent/{newParentId}")]
+        public async Task<IActionResult> UpdateParentChildRelations(int elementId, int newParentId)
         {
-            var trainComponent = await _trainComponentRepository.GetByIdAsync(id);
+            var renewedElement =
+                await _componentHierarchyRepository.UpdateParentChildRelationsForElement(elementId, newParentId);
 
-            if (trainComponent == null)
-                return NotFound();
-
-            trainComponent.CanAssignQuantity = canAssignQuantity;
-            await _trainComponentRepository.UpdateAsync(trainComponent);
-
-            return Ok();
+            return Ok(renewedElement);
         }
 
-        private void BuildHierarchy(TrainComponent parentComponent, List<ComponentHierarchy> hierarchies, 
-            TrainComponentDto dto)
-        {
-            var children = hierarchies
-                .Where(ch => ch.ParentComponentID == parentComponent.ID)
-                .Select(ch => _mapper.Map<TrainComponentDto>(ch.ChildComponent))
-                .ToList();
-
-            foreach (var child in children)
-                BuildHierarchy(_mapper.Map<TrainComponent>(child), hierarchies, child);
-
-            dto.Children = children;
-        }
+        [HttpDelete]
+        [Route("{elementId}")]
+        public async Task RemoveTrainComponentFromHierarchy(int elementId) =>
+            await _componentHierarchyRepository.RemoveTrainComponentFromHierarchy(elementId);
     }
 }
