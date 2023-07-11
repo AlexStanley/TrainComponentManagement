@@ -17,10 +17,11 @@ namespace TrainComponentManagement.Repositories
 
         public async Task<TrainComponentQuantityAssignment> GetComponentFromTheTableForAssigningQuantity(int id)
         {
-            var temp = await _context.TrainComponentQuantityAssignments.FirstOrDefaultAsync(comp => comp.TrainComponentID == id)
+            var componentQuantityAssignment = await _context.TrainComponentQuantityAssignments
+                .FirstOrDefaultAsync(comp => comp.TrainComponentID == id)
                 ?? new TrainComponentQuantityAssignment { TrainComponentID = id };
 
-            return temp;
+            return componentQuantityAssignment;
         }
 
         public async Task AssigningQuantityOfTrainComponent(TrainComponentQuantityAssignment component)

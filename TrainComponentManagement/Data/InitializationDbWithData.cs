@@ -156,7 +156,7 @@ namespace TrainComponentManagement.Data
                     {
                         ParentComponentID = 29,
                         ChildComponentID = 30,
-                        Depth = 2
+                        Depth = 3
                     },
                     new ComponentHierarchy
                     {
