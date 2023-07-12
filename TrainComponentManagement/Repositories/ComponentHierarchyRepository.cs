@@ -76,6 +76,10 @@ namespace TrainComponentManagement.Repositories
 
             _context.ComponentHierarchies.Add(componentHierarchy);
             await _context.SaveChangesAsync();
+
+            var hierarchyForChildItem = await GetAllChildrenElementsForParentOne(childId);
+            if (hierarchyForChildItem != null)
+                await UpdateDepthForChildItems(childId);
         }
 
         public async Task<ComponentHierarchy?> GetTrainComponentClosureById(int parentItemID)
@@ -92,6 +96,30 @@ namespace TrainComponentManagement.Repositories
         public async Task<bool> HasParent(int trainComponentId)
         {
             return await _context.ComponentHierarchies.AnyAsync(ch => ch.ChildComponentID == trainComponentId);
+        }
+
+        public async Task<List<ComponentHierarchy>> GetAllChildrenElementsForParentOne(int parentId)
+        {
+            return await _context.ComponentHierarchies.Where(elem => elem.ParentComponentID == parentId).ToListAsync();
+        }
+
+        private async Task UpdateDepthForChildItems(int itemId)
+        {
+            var hierarchyForChildItem = await GetAllChildrenElementsForParentOne(itemId);
+
+            foreach (var item in hierarchyForChildItem)
+            {
+                var parentItemInHierarchy = await GetTrainComponentClosureById(item.ParentComponentID);
+
+                item.Depth = parentItemInHierarchy == null ? 1 : parentItemInHierarchy.Depth + 1;
+
+                _context.ComponentHierarchies.Update(item);
+                await _context.SaveChangesAsync();
+
+                var hierarchyForItem = await GetAllChildrenElementsForParentOne(item.ChildComponentID);
+                if (hierarchyForItem != null)
+                    await UpdateDepthForChildItems(item.ChildComponentID);
+            }
         }
 
         private async Task<List<ComponentHierarchy>> CreateFullListOfRelationsBetweenComponents()
